@@ -200,6 +200,7 @@ $config['plugins'] = array(
                 'minimumlossValue' => 0, //Put the minimum isk loss value for killmails here (Do not put any commas just numbers)
                 'bigKill' => null, //Set an isk amount you'd like to consider a high value kill, will alert the channel if any kills/losses hit this amount. (Leave as null if you don't want this feature)
                 'bigKillChannel' => 0, //what channel does the bot post big kills into (must be set, if ud like to use one channel just put the same u put above here)
+                'sovAlliances' => array(); // Alliances to check for sov system kills
             ),
             'group2' => array(
                 'name' => 'corp2', // insert a label (these must be unique)
@@ -212,6 +213,7 @@ $config['plugins'] = array(
                 'minimumlossValue' => 0, //Put the minimum isk loss value for killmails here (Do not put any commas just numbers)
                 'bigKill' => null, //Set an isk amount you'd like to consider a high value kill, will alert the channel if any kills/losses hit this amount. (Leave as null if you don't want this feature)
                 'bigKillChannel' => 0, //what channel does the bot post big kills into (must be set, if ud like to use one channel just put the same u put above here)
+                'sovAlliances' => array(); // Alliances to check for sov system kills
             ),
         ),
     ),

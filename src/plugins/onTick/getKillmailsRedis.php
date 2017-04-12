@@ -78,6 +78,36 @@ class getKillmailsRedis
         }
     }
 
+    private function getSov(array $owners)
+    {
+    	$xml = simplexml_load_file('https://api.eveonline.com/eve/AllianceList.xml.aspx');
+    	$alliances = array();
+
+    	foreach($xml->result->rowset->row as $row) {
+    		$alliance = (int) $row['allianceID'];
+    		if ($alliance < 1) {
+    			continue;
+    		}
+    		$alliances[$alliance]['name'] = (string) $row['name'];
+    		$alliances[$alliance]['shortName'] = (string) $row['shortName'];
+    	}
+
+    	$xml = simplexml_load_file('https://api.eveonline.com/map/Sovereignty.xml.aspx');
+    	$systems = array();
+
+    	foreach($xml->result->rowset->row as $row) {
+    		$alliance = (int) $row['allianceID'];
+    		if ($alliance < 1) {
+    			continue;
+    		}
+    		if (!in_array($alliances[$alliance]['shortName'],$owners)) {
+    			continue;
+    		}
+    		$systems[(int) $row['solarSystemID']] = $alliances[$alliance];
+    	}
+    	return $systems;
+    }
+
     private function getKM()
     {
         $i = 0;
@@ -152,6 +182,8 @@ class getKillmailsRedis
                     $corpKill = true;
                 } elseif (in_array((int) $kmGroup['allianceID'], $attackerAllianceArray) && (int) $kmGroup['allianceID'] !== 0) {
                     $allianceKill = true;
+                } elseif (in_array($kill['killmail']['solarSystem']['name'], $this->getSov($kmGroup['sovAlliances']))) {                 // Check if the KM occurred in monitored sov space
+                    $sovKill = true;
                 } else {
                 	//if it wasn't any of these continue in case there is another group to process
                     continue;
@@ -166,7 +198,7 @@ class getKillmailsRedis
                 if (null === $kmGroup['bigKill']) {
                     $kmGroup['bigKill'] = 99999999999999999999999999;
                 }
-                
+
                 //get the kill values
                 $killID = $kill['killmail']['killID'];
                 $channelID = $kmGroup['channel'];
@@ -197,6 +229,8 @@ class getKillmailsRedis
                         $msg = "@here \n :warning:***Expensive Killmail***:warning: \n **{$killTime}**\n\n**{$shipName}** worth **{$totalValue} ISK** flown by **{$victimName}** of (***{$victimCorpName}|{$victimAllianceName}***) killed in {$systemName}\nhttps://zkillboard.com/kill/{$killID}/";
                     } elseif ($kmGroup['bigKill'] == null || $rawValue <= $kmGroup['bigKill']) {
                         $msg = "**{$killTime}**\n\n**{$shipName}** worth **{$totalValue} ISK** flown by **{$victimName}** of (***{$victimCorpName}|{$victimAllianceName}***) killed in {$systemName}\nhttps://zkillboard.com/kill/{$killID}/";
+                    } elseif ($sovKill) {
+                        $msg = "**BLUE SOV KILLMAIL**\n\n**{$killTime}**\n\n**{$shipName}** worth **{$totalValue} ISK** flown by **{$victimName}** of (***{$victimCorpName}|{$victimAllianceName}***) killed in {$systemName}\nhttps://zkillboard.com/kill/{$killID}/";
                     }
                 } elseif ($victimName === '') {
                     $msg = "**{$killTime}**\n\n**{$shipName}** worth **{$totalValue} ISK** owned by (***{$victimCorpName}|{$victimAllianceName}***) killed in {$systemName}\nhttps://zkillboard.com/kill/{$killID}/";
